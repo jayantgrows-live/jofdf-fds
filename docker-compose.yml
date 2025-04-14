@@ -8,8 +8,9 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - GROQ_API_KEY=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
-      - GEMINI_API_KEY=AIzaSyAj5LP79_6DuXh_JR2nHBTWvxKno7VQvDE
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - API_KEY=${API_KEY}
     volumes:
       - .:/app
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
