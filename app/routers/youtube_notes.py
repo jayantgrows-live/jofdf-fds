@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from app.services.content_generator import ContentGenerator
-from app.schemas.voice_note import YouTubeVideoRequest, YouTubeVideoResponse, ErrorResponse
+from app.schemas.voice_note import YouTubeVideoRequest, YouTubeVideoResponse, ErrorResponse, RawTextRequest
 from app.services.youtube_transcript import fetch_youtube_transcript, extract_video_id
 import logging
 
@@ -60,4 +60,44 @@ async def process_youtube_video(request: YouTubeVideoRequest):
         raise e
     except Exception as e:
         logger.error(f"Error processing YouTube video: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/raw-text",
+            response_model=YouTubeVideoResponse,
+            responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}})
+async def process_raw_text(request: RawTextRequest):
+    """
+    Process raw text input:
+    1. Generate emoji, title, and summary using AI
+    """
+    try:
+        if not request.text.strip():
+            raise HTTPException(
+                status_code=400,
+                detail="Text input cannot be empty"
+            )
+        
+        # Generate content using AI
+        content = await content_generator.generate_content(request.text)
+        
+        # Ensure all required fields are present
+        required_fields = ["emoji", "title", "summary"]
+        for field in required_fields:
+            if field not in content:
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Content generation failed: missing {field} field"
+                )
+        
+        return YouTubeVideoResponse(
+            emoji=content["emoji"],
+            title=content["title"],
+            transcription=request.text,
+            summary=content["summary"]
+        )
+        
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logger.error(f"Error processing raw text: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e)) 
