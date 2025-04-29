@@ -17,4 +17,7 @@ class YouTubeVideoResponse(BaseModel):
     emoji: str
     title: str
     transcription: str
-    summary: str 
+    summary: str
+
+class RawTextRequest(BaseModel):
+    text: str 
